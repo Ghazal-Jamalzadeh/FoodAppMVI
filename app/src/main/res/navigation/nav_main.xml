@@ -7,14 +7,14 @@
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.jmzd.ghazal.foodappmvvm.ui.home.HomeFragment"
+        android:name="com.jmzd.ghazal.foodappmvi.ui.home.HomeFragment"
         android:label="HomeFragment"
         tools:layout="@layout/fragment_home">
 
     </fragment>
     <fragment
         android:id="@+id/detailFragment"
-        android:name="com.jmzd.ghazal.foodappmvvm.ui.detail.DetailFragment"
+        android:name="com.jmzd.ghazal.foodappmvi.ui.detail.DetailFragment"
         android:label="DetailFragment"
         tools:layout="@layout/fragment_detail">
         <argument
@@ -23,7 +23,7 @@
     </fragment>
     <fragment
         android:id="@+id/favoritesFragment"
-        android:name="com.jmzd.ghazal.foodappmvvm.ui.favorites.FavoritesFragment"
+        android:name="com.jmzd.ghazal.foodappmvi.ui.favorites.FavoritesFragment"
         android:label="FavoritesFragment"
         tools:layout="@layout/fragment_favorites"/>
 

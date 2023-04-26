@@ -4,6 +4,10 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/AndroidProjects/FoodAppMVI/app/src/main/res/layout/activity_main.xml" value="0.2" />
+        <entry key="..\:/AndroidProjects/FoodAppMVI/app/src/main/res/layout/activity_player.xml" value="0.2" />
+        <entry key="..\:/AndroidProjects/FoodAppMVI/app/src/main/res/layout/fragment_detail.xml" value="0.2" />
+        <entry key="..\:/AndroidProjects/FoodAppMVI/app/src/main/res/layout/fragment_favorites.xml" value="0.1859375" />
+        <entry key="..\:/AndroidProjects/FoodAppMVI/app/src/main/res/layout/fragment_home.xml" value="0.1" />
         <entry key="..\:/AndroidProjects/FoodAppMVI/app/src/main/res/menu/menu_main.xml" value="0.2" />
       </map>
     </option>

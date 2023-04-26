@@ -30,4 +30,10 @@
         <item name="cornerSizeTopLeft">10dp</item>
         <item name="cornerSizeTopRight">10dp</item>
     </style>
+    <style name="Theme.FoodAppMVI.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+    <style name="Theme.FoodAppMVI.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="Theme.FoodAppMVI.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 </resources>
