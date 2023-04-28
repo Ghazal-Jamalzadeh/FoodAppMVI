@@ -1,10 +1,13 @@
 package com.jmzd.ghazal.foodappmvi.viewmodel.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jmzd.ghazal.foodappmvi.data.repository.HomeRepository
+import com.jmzd.ghazal.foodappmvi.utils.TAG
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.consumeAsFlow
@@ -14,7 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(private val repository: HomeRepository) : ViewModel() {
 
-    val intentChannel = Channel<HomeIntent>()
+    val intentChannel = Channel<HomeIntent>(UNLIMITED)
     private val _state = MutableStateFlow<HomeState>(HomeState.Idle)
     val state: StateFlow<HomeState> get() = _state
 
@@ -27,8 +30,14 @@ class HomeViewModel @Inject constructor(private val repository: HomeRepository) 
             when (intent) {
                 is HomeIntent.LoadFilterLetters -> fetchingLetters()
                 is HomeIntent.LoadRandomBanner -> fetchingBanner()
+
                 is HomeIntent.LoadCategoriesList -> fetchingCategories()
-                is HomeIntent.LoadFoodsByLetter -> fetchingFoodsByLetter(intent.letter)
+                is HomeIntent.LoadFoodsByLetter -> {
+                    Log.d(TAG, "intent :: LoadFoodsByLetter ${intent.letter}")
+
+                    fetchingFoodsByLetter(intent.letter)
+
+                }
                 is HomeIntent.LoadFoodsBySearch -> fetchingFoodsBySearch(intent.search)
                 is HomeIntent.LoadFoodsByCategory -> fetchingFoodsByCategory(intent.category)
             }
@@ -75,7 +84,6 @@ class HomeViewModel @Inject constructor(private val repository: HomeRepository) 
     }
 
     private suspend fun fetchingFoodsByLetter(letter: String) {
-
         val response = repository.foodsList(letter)
         _state.emit(HomeState.LoadingFoods)
         when (response.code()) {
@@ -99,13 +107,12 @@ class HomeViewModel @Inject constructor(private val repository: HomeRepository) 
     }
 
     private suspend fun fetchingFoodsBySearch(search: String) {
-
         val response = repository.searchFood(search)
         _state.emit(HomeState.LoadingFoods)
         when (response.code()) {
             in 200..202 -> {
                 _state.value = if (response.body()!!.meals != null) {
-                    HomeState.FoodsListLoaded( foods = response.body()!!.meals!!)
+                    HomeState.FoodsListLoaded(foods = response.body()!!.meals!!)
                 } else {
                     HomeState.Empty
                 }
@@ -122,13 +129,12 @@ class HomeViewModel @Inject constructor(private val repository: HomeRepository) 
 
     private suspend fun fetchingFoodsByCategory(category: String) {
 
-
         val response = repository.foodByCategory(category)
         _state.emit(HomeState.LoadingFoods)
         when (response.code()) {
             in 200..202 -> {
                 _state.value = if (response.body()!!.meals != null) {
-                    HomeState.FoodsListLoaded( foods = response.body()!!.meals!!)
+                    HomeState.FoodsListLoaded(foods = response.body()!!.meals!!)
                 } else {
                     HomeState.Empty
                 }

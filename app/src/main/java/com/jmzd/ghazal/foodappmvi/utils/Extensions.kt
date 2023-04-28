@@ -16,6 +16,7 @@ fun Spinner.setupListWithAdapter(list: MutableList<out Any>, callback: (String) 
     val adapter = ArrayAdapter(context, R.layout.item_spinner, list)
     adapter.setDropDownViewResource(R.layout.item_spinner_list)
     this.adapter = adapter
+
     this.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
         override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
             Log.d(TAG, "onItemSelected: ${list[p2]}")
@@ -23,7 +24,7 @@ fun Spinner.setupListWithAdapter(list: MutableList<out Any>, callback: (String) 
         }
 
         override fun onNothingSelected(p0: AdapterView<*>?) {
-
+            Log.d(TAG, "onNothingSelected: ")
         }
 
     }

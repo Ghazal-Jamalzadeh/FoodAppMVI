@@ -1,21 +1,31 @@
 package com.jmzd.ghazal.foodappmvi.ui.home
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import coil.load
 import com.jmzd.ghazal.foodappmvi.R
+import com.jmzd.ghazal.foodappmvi.data.model.home.ResponseCategoriesList
+import com.jmzd.ghazal.foodappmvi.data.model.home.ResponseCategoriesList.Category
 import com.jmzd.ghazal.foodappmvi.databinding.FragmentHomeBinding
-import com.jmzd.ghazal.foodappmvi.utils.setupListWithAdapter
+import com.jmzd.ghazal.foodappmvi.ui.home.adapters.CategoriesAdapter
+import com.jmzd.ghazal.foodappmvi.ui.home.adapters.FoodsAdapter
+import com.jmzd.ghazal.foodappmvi.utils.*
 import com.jmzd.ghazal.foodappmvi.viewmodel.home.HomeIntent
 import com.jmzd.ghazal.foodappmvi.viewmodel.home.HomeState
 import com.jmzd.ghazal.foodappmvi.viewmodel.home.HomeViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
@@ -24,8 +34,16 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding
 
+    @Inject
+    lateinit var categoriesAdapter: CategoriesAdapter
+
+    @Inject
+    lateinit var foodsAdapter: FoodsAdapter
+
     //Other
     private val viewModel: HomeViewModel by viewModels()
+
+    enum class PageState { EMPTY, NETWORK, NONE }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -45,17 +63,28 @@ class HomeFragment : Fragment() {
                 //call intents
                 viewModel.intentChannel.send(HomeIntent.LoadRandomBanner)
                 viewModel.intentChannel.send(HomeIntent.LoadFilterLetters)
+                viewModel.intentChannel.send(HomeIntent.LoadCategoriesList)
+                val rand: String = ('A'..'Z').random().toString()
+                viewModel.intentChannel.send(HomeIntent.LoadFoodsByLetter(letter = rand))
 
                 //Get data
-                viewModel.state.collect { state : HomeState ->
+                viewModel.state.collect { state: HomeState ->
                     when (state) {
-                        is HomeState.Idle -> {}
+                        is HomeState.Idle -> {
+                        }
                         is HomeState.FilterLettersLoaded -> {
-                            filterSpinner.setupListWithAdapter(state.letters) {
+                            var spinnerFirstLoad = true
+                            filterSpinner.setupListWithAdapter(state.letters) { selectedLetter: String ->
                                 lifecycleScope.launchWhenCreated {
-                                    //viewModel.intentChannel.send(ListIntent.LoadFoods(it))
+                                    if (spinnerFirstLoad) {
+                                        spinnerFirstLoad = false
+                                    } else {
+                                        viewModel.intentChannel.send(HomeIntent.LoadFoodsByLetter(
+                                            selectedLetter))
+                                    }
                                 }
                             }
+                            filterSpinner.isSelected = false
                         }
                         is HomeState.RandomBannerLoaded -> {
                             if (state.banner != null) {
@@ -65,46 +94,61 @@ class HomeFragment : Fragment() {
                                 }
                             }
                         }
-//                        is ListState.LoadingCategory -> {
-//                            homeCategoryLoading.isVisible(true, categoryList)
-//                        }
-//                        is ListState.CategoriesList -> {
-//                            homeCategoryLoading.isVisible(false, categoryList)
-//                            categoriesAdapter.setData(state.categories)
-//                            categoryList.setupRecyclerView(
-//                                LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false),
-//                                categoriesAdapter
-//                            )
-//
-//                            categoriesAdapter.setOnItemClickListener {
-//                                lifecycleScope.launchWhenCreated {
-//                                    viewModel.intentChannel.send(ListIntent.LoadFoodByCategory(it.strCategory!!))
-//                                }
-//                            }
-//                        }
-//                        is ListState.LoadingFoods -> {
-//                            homeFoodsLoading.isVisible(true, foodsList)
-//                        }
-//                        is ListState.FoodsList -> {
-//                            checkConnectionOrEmpty(false, PageState.NONE)
-//                            homeFoodsLoading.isVisible(false, foodsList)
-//                            foodsAdapter.setData(state.foods)
-//                            foodsList.setupRecyclerView(
-//                                LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false),
-//                                foodsAdapter
-//                            )
-//
-//                            foodsAdapter.setOnItemClickListener {
-//                                val direction = FoodsListFragmentDirections.actionListToDetail(it.idMeal?.toInt()!!)
-//                                findNavController().navigate(direction)
-//                            }
-//                        }
-//                        is ListState.Empty -> {
-//                            checkConnectionOrEmpty(true, PageState.EMPTY)
-//                        }
-                        is HomeState.Error -> {
-                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                        is HomeState.LoadingCategories -> {
+                            homeCategoryLoading.isVisibleGone(true, categoryList)
                         }
+                        is HomeState.CategoriesLoaded -> {
+                            homeCategoryLoading.isVisibleGone(false, categoryList)
+                            categoriesAdapter.setData(state.categories)
+                            categoryList.setupRecyclerView(
+                                LinearLayoutManager(requireContext(),
+                                    LinearLayoutManager.HORIZONTAL,
+                                    false),
+                                categoriesAdapter
+                            )
+
+                            categoriesAdapter.setOnItemClickListener { category: Category ->
+                                lifecycleScope.launchWhenCreated {
+                                    viewModel.intentChannel.send(HomeIntent.LoadFoodsByCategory(
+                                        category.strCategory!!))
+                                }
+                            }
+                        }
+                        is HomeState.LoadingFoods -> {
+                            homeFoodsLoading.isVisibleInvisible(true, foodsList)
+                        }
+                        is HomeState.FoodsListLoaded -> {
+                            checkConnectionOrEmpty(false, PageState.NONE)
+                            homeFoodsLoading.isVisibleInvisible(false, foodsList)
+                            foodsAdapter.setData(state.foods)
+                            foodsList.setupRecyclerView(
+                                LinearLayoutManager(requireContext(),
+                                    LinearLayoutManager.HORIZONTAL,
+                                    false),
+                                foodsAdapter
+                            )
+
+                            foodsAdapter.setOnItemClickListener {
+                                val direction =
+                                    HomeFragmentDirections.actionToDetailFragment(it.idMeal?.toInt()!!)
+                                findNavController().navigate(direction)
+                            }
+                        }
+                        is HomeState.Empty -> {
+                            checkConnectionOrEmpty(true, PageState.EMPTY)
+                        }
+                        is HomeState.Error -> {
+                            Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }
+                }
+            }
+            //Search
+            searchEdt.addTextChangedListener {
+                if (it.toString().length > 2) {
+                    lifecycleScope.launchWhenCreated {
+                        viewModel.intentChannel.send(HomeIntent.LoadFoodsBySearch(it.toString()))
                     }
                 }
             }
@@ -114,6 +158,27 @@ class HomeFragment : Fragment() {
     override fun onStop() {
         super.onStop()
         _binding = null
+    }
+
+    private fun checkConnectionOrEmpty(isShownError: Boolean, state: PageState) {
+        binding?.apply {
+            if (isShownError) {
+                homeDisLay.isVisibleInvisible(true, homeContent)
+                when (state) {
+                    PageState.EMPTY -> {
+                        disconnectLay.disImg.setImageResource(R.drawable.box)
+                        disconnectLay.disTxt.text = getString(R.string.emptyList)
+                    }
+                    PageState.NETWORK -> {
+                        disconnectLay.disImg.setImageResource(R.drawable.disconnect)
+                        disconnectLay.disTxt.text = getString(R.string.checkInternet)
+                    }
+                    else -> {}
+                }
+            } else {
+                homeDisLay.isVisibleInvisible(false, homeContent)
+            }
+        }
     }
 
 }
