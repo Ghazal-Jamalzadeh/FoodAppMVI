@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 
 data class ResponseFoodsList(
     @SerializedName("meals")
-    val meals: List<Meal>?
+    val meals: MutableList<Meal>?
 ) {
     data class Meal(
         @SerializedName("dateModified")
