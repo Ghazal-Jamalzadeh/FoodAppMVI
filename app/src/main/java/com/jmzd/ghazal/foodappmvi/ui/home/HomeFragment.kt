@@ -21,6 +21,8 @@ import com.jmzd.ghazal.foodappmvi.databinding.FragmentHomeBinding
 import com.jmzd.ghazal.foodappmvi.ui.home.adapters.CategoriesAdapter
 import com.jmzd.ghazal.foodappmvi.ui.home.adapters.FoodsAdapter
 import com.jmzd.ghazal.foodappmvi.utils.*
+import com.jmzd.ghazal.foodappmvi.utils.network.ConnectivityStatus
+import com.jmzd.ghazal.foodappmvi.utils.network.NetworkConnectivity
 import com.jmzd.ghazal.foodappmvi.viewmodel.home.HomeIntent
 import com.jmzd.ghazal.foodappmvi.viewmodel.home.HomeState
 import com.jmzd.ghazal.foodappmvi.viewmodel.home.HomeViewModel
@@ -39,6 +41,9 @@ class HomeFragment : Fragment() {
 
     @Inject
     lateinit var foodsAdapter: FoodsAdapter
+
+    @Inject
+    lateinit var networkConnectivity: NetworkConnectivity
 
     //Other
     private val viewModel: HomeViewModel by viewModels()
@@ -61,11 +66,34 @@ class HomeFragment : Fragment() {
             lifecycleScope.launchWhenCreated {
 
                 //call intents
-                viewModel.intentChannel.send(HomeIntent.LoadRandomBanner)
-                viewModel.intentChannel.send(HomeIntent.LoadFilterLetters)
-                viewModel.intentChannel.send(HomeIntent.LoadCategoriesList)
-                val rand: String = ('A'..'Z').random().toString()
-                viewModel.intentChannel.send(HomeIntent.LoadFoodsByLetter(letter = rand))
+                /*حالت بدون چک کردن اینترنت*/
+                /* viewModel.intentChannel.send(HomeIntent.LoadRandomBanner)
+                 viewModel.intentChannel.send(HomeIntent.LoadFilterLetters)
+                 viewModel.intentChannel.send(HomeIntent.LoadCategoriesList)
+                 val rand: String = ('A'..'Z').random().toString()
+                 viewModel.intentChannel.send(HomeIntent.LoadFoodsByLetter(letter = rand))*/
+
+                //Check internet
+                lifecycleScope.launchWhenCreated {
+                    networkConnectivity.observe().collect { status : ConnectivityStatus.Status ->
+                        when (status) {
+                            ConnectivityStatus.Status.Available -> {
+                                checkConnectionOrEmpty(false, PageState.NONE)
+                                viewModel.intentChannel.send(HomeIntent.LoadRandomBanner)
+                                viewModel.intentChannel.send(HomeIntent.LoadFilterLetters)
+                                viewModel.intentChannel.send(HomeIntent.LoadCategoriesList)
+                                val rand: String = ('A'..'Z').random().toString()
+                                viewModel.intentChannel.send(HomeIntent.LoadFoodsByLetter(letter = rand))
+                            }
+                            ConnectivityStatus.Status.Unavailable -> {}
+                            ConnectivityStatus.Status.Losing -> {}
+                            ConnectivityStatus.Status.Lost -> {
+                                checkConnectionOrEmpty(true, PageState.NETWORK)
+                            }
+                        }
+                    }
+                }
+
 
                 //Get data
                 viewModel.state.collect { state: HomeState ->
@@ -152,6 +180,8 @@ class HomeFragment : Fragment() {
                     }
                 }
             }
+
+
         }
     }
 
