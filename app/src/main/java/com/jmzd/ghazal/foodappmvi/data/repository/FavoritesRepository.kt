@@ -6,4 +6,5 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class FavoritesRepository @Inject constructor(private val dao: FoodDao) {
+    fun foodsList() = dao.getAllFoods()
 }
