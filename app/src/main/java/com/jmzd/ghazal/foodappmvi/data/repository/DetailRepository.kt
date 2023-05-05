@@ -13,6 +13,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
-class DetailRepository @Inject constructor(private val api: ApiServices , private val dao: FoodDao) {
-
+class DetailRepository @Inject constructor(private val api: ApiServices, private val dao: FoodDao) {
+    suspend fun detailFood(id: Int) = api.foodDetail(id)
+    suspend fun saveFood(entity: FoodEntity) = dao.saveFood(entity)
+    suspend fun deleteFood(entity: FoodEntity) = dao.deleteFood(entity)
+    fun existsFood(id: Int) = dao.existsFood(id)
 }
