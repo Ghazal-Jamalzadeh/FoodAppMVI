@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -47,6 +48,7 @@ class HomeFragment : Fragment() {
 
     //Other
     private val viewModel: HomeViewModel by viewModels()
+//    private val viewModel2 = ViewModelProvider(this)[HomeViewModel ::class.java]
 
     enum class PageState { EMPTY, NETWORK, NONE }
 
